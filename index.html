@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover lets the safe-area-inset-* env() values resolve, which is
+     how content clears the Pixel's punch-hole camera and gesture nav bar. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E55C20">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Discover Bank</title>
+
+<!-- All paths relative. GitHub Pages serves this from a subpath, and a leading
+     slash would silently resolve to the domain root and 404. -->
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+
+<!-- Reusable bits, cloned by app.js ------------------------------------------->
+
+<!-- The arc gradient is defined once here rather than inside the template.
+     Cloning a template that carries its own <defs> would duplicate the gradient
+     id, and duplicate ids in one document are a coin flip as to which wins.
+     Stop colours come from CSS so the palette stays in one place. -->
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="arc-gradient" x1="0" y1="0" x2="1" y2="0">
+      <stop class="arc-stop-a" offset="0"/>
+      <stop class="arc-stop-b" offset="1"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<template id="tpl-wordmark">
+  <svg class="wordmark" viewBox="0 0 148 26" role="img" aria-label="Discover">
+    <text class="wordmark__text" x="0" y="14">DISCOVER</text>
+    <path class="wordmark__arc" d="M2 21.5 Q74 27.5 146 19" fill="none" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+</template>
+
+<!-- Official FDIC digital sign, 12 CFR 328.5. The text is prescribed verbatim,
+     em dash included -- do not reword it. -->
+<template id="tpl-fdic">
+  <div class="fdic">
+    <span class="fdic__mark">FDIC</span><span class="fdic__statement">FDIC-Insured&mdash;Backed by the full faith and credit of the U.S. Government</span>
+  </div>
+</template>
+
+<!-- Screen 1: login ---------------------------------------------------------->
+
+<section id="view-login" class="view" aria-label="Log in">
+  <div class="login">
+    <div class="login__brand" data-wordmark="brand"></div>
+    <div data-fdic></div>
+
+    <!-- Populated by app.js on a failed attempt. -->
+    <div id="login-error" class="banner" role="alert" hidden></div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <input id="login-user" type="text" placeholder=" " autocomplete="username"
+               autocapitalize="none" spellcheck="false" required>
+        <label for="login-user">User ID</label>
+      </div>
+
+      <div class="field">
+        <input id="login-pass" type="password" placeholder=" " autocomplete="current-password"
+               required>
+        <label for="login-pass">Password</label>
+      </div>
+
+      <label class="check">
+        <input id="login-remember" type="checkbox">
+        <span>Remember User ID</span>
+      </label>
+
+      <button class="btn btn--fill" type="submit">Log In</button>
+    </form>
+
+    <div class="login__links">
+      <a href="#" data-inert>Forgot User ID or Password?</a>
+      <a href="#" data-inert>Register Your Account</a>
+    </div>
+  </div>
+
+  <footer class="foot" data-foot></footer>
+</section>
+
+<!-- Screen 2: accounts ------------------------------------------------------->
+
+<section id="view-accounts" class="view" aria-label="Accounts" hidden>
+  <header class="bar">
+    <div class="bar__brand" data-wordmark="light"></div>
+    <div class="bar__actions">
+      <button class="icon" type="button" data-inert aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a5 5 0 0 0-5 5v3.6c0 .5-.2 1-.5 1.4L5 15h14l-1.5-2a2.3 2.3 0 0 1-.5-1.4V8a5 5 0 0 0-5-5Z"/><path d="M9.5 18a2.5 2.5 0 0 0 5 0"/></svg>
+      </button>
+      <button class="icon" type="button" data-inert aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 4v2m0 12v2m-8-8h2m12 0h2M6.3 6.3l1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4m-8.6 8.6-1.4 1.4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="strip" data-fdic></div>
+
+  <div class="scroll">
+    <div class="total">
+      <div class="total__label">Total Balance</div>
+      <!-- Summed from CONFIG.accounts, never hardcoded. -->
+      <div class="total__value" id="total-balance">&nbsp;</div>
+    </div>
+
+    <h2 class="section">Bank Accounts</h2>
+    <ul class="rows" id="account-rows"></ul>
+
+    <button class="link-btn" type="button" id="log-out">Log Out</button>
+    <footer class="foot" data-foot></footer>
+  </div>
+</section>
+
+<!-- Screen 3: savings transactions -------------------------------------------->
+
+<section id="view-transactions" class="view" aria-label="Online Savings" hidden>
+  <header class="bar">
+    <button class="icon" type="button" id="tx-back" aria-label="Back to accounts">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h1 class="bar__title">Online Savings</h1>
+  </header>
+
+  <div class="strip" data-fdic></div>
+
+  <div class="scroll">
+    <div class="total total--tight">
+      <div class="total__label">Available Balance</div>
+      <div class="total__value" id="savings-balance">&nbsp;</div>
+      <div class="total__sub" id="savings-mask"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--ghost" type="button" data-inert>Transfer Money</button>
+      <button class="btn btn--fill" type="button" data-inert>Deposit Check</button>
+    </div>
+
+    <div class="finder">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input id="tx-search" type="search" placeholder="Search transactions"
+               autocapitalize="none" spellcheck="false" aria-label="Search transactions">
+      </div>
+      <div class="segs" role="group" aria-label="Filter transactions">
+        <button type="button" class="seg is-on" data-filter="all">All</button>
+        <button type="button" class="seg" data-filter="in">Deposits</button>
+        <button type="button" class="seg" data-filter="out">Withdrawals</button>
+      </div>
+    </div>
+
+    <h2 class="section">Transactions</h2>
+    <div id="tx-list"></div>
+    <p class="empty" id="tx-empty" hidden>No transactions match your search.</p>
+
+    <!-- Hidden while a search or filter is narrowing the list: a filtered view
+         isn't the end of history, and offering to load more there reads broken. -->
+    <div class="more" id="tx-more">
+      <button class="btn btn--ghost" type="button" id="load-earlier">Load Earlier Transactions</button>
+    </div>
+
+    <footer class="foot" data-foot></footer>
+  </div>
+</section>
+
+<!-- Shared overlays ---------------------------------------------------------->
+
+<div class="modal" id="modal" hidden>
+  <div class="modal__back" data-close-modal></div>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 class="modal__title" id="modal-title"></h2>
+    <p class="modal__body" id="modal-body"></p>
+    <button class="btn btn--fill" type="button" data-close-modal>Close</button>
+  </div>
+</div>
+
+
+<script src="./js/config.js"></script>
+<script src="./js/data.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
