@@ -16,16 +16,33 @@
   --rule:         #E3E3E3;
   --surface:      #FFFFFF;
   --surface-alt:  #F6F6F6;
+  --field-line:   #9A9A9A;
   --credit:       #0A7B3E;
   --error:        #C0261B;
   --error-bg:     #FDF2F1;
 
+  --navy:         #0A2240;  /* login background */
   --fdic-navy:    #003256;  /* regulated value, do not change */
 
   --pad: 20px;
   --radius: 12px;
 
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Dark mode. Every component reads these through var(), so overriding the
+   tokens on <body> is the whole implementation. The login screen stays navy in
+   both modes -- that's a fixed design choice, not a theme. */
+body.dark {
+  --ink:          #F1F1F1;
+  --ink-muted:    #9B9B9B;
+  --rule:         #2C2C2C;
+  --surface:      #121212;
+  --surface-alt:  #1C1C1C;
+  --field-line:   #5C5C5C;
+  --credit:       #4ADE80;
+  --error:        #FF8A80;
+  --error-bg:     #3A1512;
 }
 
 * { box-sizing: border-box; }
@@ -48,7 +65,7 @@ body {
 }
 
 /* Kill the tap-highlight flash Chrome puts on every interactive element. */
-button, a, input, li { -webkit-tap-highlight-color: transparent; }
+button, a, input, li, select { -webkit-tap-highlight-color: transparent; }
 
 h1, h2 { margin: 0; font-weight: 600; }
 button { font: inherit; color: inherit; }
@@ -63,6 +80,7 @@ button { font: inherit; color: inherit; }
   background: var(--surface);
 }
 .view[hidden] { display: none; }
+.view--navy { background: var(--navy); }
 
 .scroll {
   flex: 1;
@@ -71,30 +89,14 @@ button { font: inherit; color: inherit; }
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Brand wordmark ---------------------------------------------------------- */
+/* Brand wordmark ----------------------------------------------------------
+ * The real mark, recoloured white in tools/build_assets.py. Height is set here
+ * and width follows from the intrinsic 579x120, so it can't distort. The
+ * width/height attributes in the markup reserve the right space before the
+ * image loads, which stops the header jumping.
+ */
 
 .wordmark { height: 22px; width: auto; display: block; }
-.wordmark__text {
-  font-family: var(--sans);
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
-/* Off-document gradient definitions. */
-.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.arc-stop-a { stop-color: var(--brand-light); }
-.arc-stop-b { stop-color: var(--brand); }
-
-/* Orange version for the white login screen. The arc is a gradient because
-   Discover's real mark is a gradient rather than a flat fill -- part of why no
-   single hex was ever published. */
-.wordmark--brand .wordmark__text { fill: var(--ink); }
-.wordmark--brand .wordmark__arc { stroke: url(#arc-gradient); }
-
-/* White version for the orange header bar. */
-.wordmark--light .wordmark__text { fill: #fff; }
-.wordmark--light .wordmark__arc { stroke: rgba(255,255,255,.85); }
 
 /* FDIC official digital sign (12 CFR 328.5) ------------------------------- */
 
@@ -117,6 +119,13 @@ button { font: inherit; color: inherit; }
   line-height: 1.25;
   color: #000;
 }
+
+/* The regulation provides for white lettering where navy or black would be
+   illegible against the background. Navy login screen and dark mode both. */
+.view--navy .fdic__mark,
+.view--navy .fdic__statement,
+body.dark .fdic__mark,
+body.dark .fdic__statement { color: #fff; }
 
 .strip {
   padding: 8px var(--pad);
@@ -161,6 +170,11 @@ button { font: inherit; color: inherit; }
   stroke-linejoin: round;
 }
 
+/* Sun in light mode, moon in dark -- the icon reflects the current mode. */
+.icon--moon { display: none; }
+body.dark .icon--sun { display: none; }
+body.dark .icon--moon { display: block; }
+
 /* Balance blocks ---------------------------------------------------------- */
 
 .total { padding: 26px var(--pad) 20px; }
@@ -168,7 +182,6 @@ button { font: inherit; color: inherit; }
 .total__label {
   font-size: 13px;
   color: var(--ink-muted);
-  text-transform: none;
 }
 .total__value {
   font-size: 34px;
@@ -238,8 +251,9 @@ button { font: inherit; color: inherit; }
 }
 .btn--fill { background: var(--brand); color: #fff; }
 .btn--fill:active { background: var(--brand-dark); }
-.btn--ghost { background: var(--surface); color: var(--brand-dark); border-color: var(--brand); }
-.btn--ghost:active { background: #FDF1EA; }
+.btn--ghost { background: transparent; color: var(--brand-dark); border-color: var(--brand); }
+.btn--ghost:active { background: rgba(229,92,32,.12); }
+body.dark .btn--ghost { color: var(--brand-light); }
 
 .actions {
   display: flex;
@@ -260,6 +274,7 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   padding: 8px 12px;
 }
+body.dark .link-btn { color: var(--brand-light); }
 
 /* Login ----------------------------------------------------------------- */
 
@@ -269,10 +284,48 @@ button { font: inherit; color: inherit; }
   padding: 0 var(--pad);
   padding-top: calc(40px + env(safe-area-inset-top, 0px));
 }
-.login__brand { display: flex; justify-content: center; margin-bottom: 14px; }
-.login__brand .wordmark { height: 26px; }
+.login__brand { display: flex; justify-content: center; margin-bottom: 20px; }
+/* White panel behind the mark. The wordmark's letters are black, and black on
+   navy is unreadable -- this keeps them black instead of knocking them out to
+   white. content-box sizing means `height` is the logo, not the panel. */
+.login__brand .wordmark {
+  height: 34px;
+  box-sizing: content-box;
+  background: #fff;
+  padding: 13px 20px;
+  border-radius: 10px;
+}
 .login .fdic { justify-content: center; margin-bottom: 26px; text-align: center; }
 .login form { margin-top: 4px; }
+
+/* Fingerprint sign-in. Hidden unless the device has a platform authenticator. */
+.bio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,.55);
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bio[hidden] { display: none; }
+.bio:active { background: rgba(255,255,255,.12); }
+.bio svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
 
 .login__links {
   margin-top: 22px;
@@ -282,9 +335,31 @@ button { font: inherit; color: inherit; }
   align-items: center;
 }
 .login__links a {
-  color: var(--brand-dark);
+  color: var(--brand-light);
   font-size: 14px;
   text-decoration: underline;
+}
+
+/* Fields on the navy login screen need their own treatment -- the shared field
+   styles assume a light background. */
+.view--navy .field input {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.45);
+  color: #fff;
+}
+.view--navy .field input:focus {
+  border-color: var(--brand-light);
+  box-shadow: 0 0 0 2px rgba(249,160,33,.35);
+}
+.view--navy .field label { color: rgba(255,255,255,.78); }
+.view--navy .check { color: #fff; }
+.view--navy .foot { color: rgba(255,255,255,.6); }
+
+/* Chrome forces its own background on autofilled inputs; a huge inset shadow is
+   the only reliable way to override it. */
+.view--navy .field input:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #143054 inset;
 }
 
 /* Floating-label text fields */
@@ -293,7 +368,7 @@ button { font: inherit; color: inherit; }
   width: 100%;
   padding: 22px 14px 8px;
   font-size: 16px;
-  border: 1px solid #9A9A9A;
+  border: 1px solid var(--field-line);
   border-radius: 6px;
   background: var(--surface);
   color: var(--ink);
@@ -319,7 +394,6 @@ button { font: inherit; color: inherit; }
 .field input:not(:placeholder-shown) + label {
   transform: translateY(-9px);
   font-size: 11.5px;
-  color: var(--ink-muted);
 }
 
 .check {
@@ -343,6 +417,179 @@ button { font: inherit; color: inherit; }
   margin-bottom: 18px;
 }
 
+/* Transfer form --------------------------------------------------------- */
+
+.form { padding: 20px var(--pad) 0; }
+
+.pick { display: block; margin-bottom: 18px; }
+.pick__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+/* Deliberately not appearance:none -- the native select chevron and picker are
+   what make this feel like a real Android form. */
+.pick select {
+  width: 100%;
+  padding: 12px 10px;
+  font-size: 15px;
+  border: 1px solid var(--field-line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.pick select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(229,92,32,.22);
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--field-line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.amount:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(229,92,32,.22);
+}
+.amount__sign { padding: 0 2px 0 12px; color: var(--ink-muted); font-size: 17px; }
+.amount input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 13px 12px 13px 4px;
+  font-size: 17px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.amount input:focus { outline: none; }
+
+.hint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  margin: -2px 0 20px;
+}
+
+/* Check capture tiles ----------------------------------------------------
+ * Each tile is a <label> wrapping a hidden file input, which is what lets the
+ * whole tile be the tap target without any JS. Once a photo is taken the
+ * thumbnail covers the tile and the prompt fades back so it still reads as
+ * re-tappable.
+ */
+
+.shots {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+
+.shot {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed var(--field-line);
+  border-radius: 10px;
+  background: var(--surface-alt);
+  overflow: hidden;
+  cursor: pointer;
+}
+.shot:active { border-color: var(--brand); }
+
+/* Older Chrome without aspect-ratio support still needs a usable height. */
+@supports not (aspect-ratio: 4 / 3) {
+  .shot { min-height: 104px; }
+}
+
+.shot__face {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 6px;
+  z-index: 1;
+}
+.shot__face svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.shot__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  line-height: 1.25;
+}
+
+.shot__thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Captured: solid border, image showing, prompt dimmed over a scrim. */
+.shot.is-set { border-style: solid; border-color: var(--credit); }
+.shot.is-set .shot__face {
+  background: rgba(0,0,0,.45);
+  border-radius: 8px;
+}
+.shot.is-set .shot__face svg { stroke: #fff; }
+.shot.is-set .shot__label { color: #fff; }
+
+.shot__done {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--credit);
+  display: grid;
+  place-items: center;
+}
+.shot__done[hidden] { display: none; }
+.shot__done svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Empty state ----------------------------------------------------------- */
+
+.blank { padding: 72px 34px 20px; text-align: center; }
+.blank__icon {
+  width: 46px;
+  height: 46px;
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .7;
+}
+.blank__text { margin: 16px 0 0; color: var(--ink-muted); font-size: 15px; }
+
 /* Search + filter -------------------------------------------------------- */
 
 .finder { padding: 10px var(--pad) 4px; }
@@ -364,7 +611,7 @@ button { font: inherit; color: inherit; }
   width: 100%;
   padding: 11px 12px 11px 38px;
   font-size: 15px;
-  border: 1px solid #B4B4B4;
+  border: 1px solid var(--field-line);
   border-radius: 999px;
   background: var(--surface);
   color: var(--ink);
@@ -440,9 +687,6 @@ button { font: inherit; color: inherit; }
 
 .empty { padding: 30px var(--pad); text-align: center; color: var(--ink-muted); font-size: 14.5px; }
 
-.more { padding: 18px var(--pad) 4px; }
-.more[hidden] { display: none; }
-
 /* Footer ----------------------------------------------------------------- */
 
 .foot {
@@ -451,6 +695,36 @@ button { font: inherit; color: inherit; }
   font-size: 11.5px;
   color: var(--ink-muted);
 }
+
+/* Loading overlay --------------------------------------------------------
+ * Sits above the modal so the transfer flow can spin first, then confirm.
+ * Covers the screen and swallows taps, which is the point -- a real app
+ * wouldn't let you press things mid-request.
+ */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.72);
+}
+.loader[hidden] { display: none; }
+body.dark .loader { background: rgba(0,0,0,.6); }
+/* The login screen is navy in both modes, so the scrim has to be dark there. */
+#view-login:not([hidden]) ~ .loader { background: rgba(6,20,38,.72); }
+
+.loader__spin {
+  width: 40px;
+  height: 40px;
+  border: 3.5px solid rgba(229,92,32,.25);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Modal ----------------------------------------------------------------- */
 
@@ -475,10 +749,26 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 12px 34px rgba(0,0,0,.28);
 }
 .modal__title { font-size: 17px; margin-bottom: 8px; }
-.modal__body { font-size: 14.5px; color: #333; margin: 0 0 18px; }
+.modal__body { font-size: 14.5px; color: var(--ink-muted); margin: 0 0 18px; }
 .modal__body strong { color: var(--ink); white-space: nowrap; }
 
-/* Respect the OS reduced-motion setting. */
+/* Account detail rows inside the modal. */
+.deets { margin: 14px 0 0; }
+.deets__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14.5px;
+}
+.deets__row:first-child { border-top: 1px solid var(--rule); }
+.deets__row strong { font-variant-numeric: tabular-nums; }
+.deets__note { font-size: 12.5px; margin: 14px 0 0; color: var(--ink-muted); }
+
+/* Respect the OS reduced-motion setting. The spinner is exempt -- a frozen
+   spinner reads as a hung app, which is worse than the motion it avoids. */
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+  *:not(.loader__spin) { transition: none !important; animation: none !important; }
 }

@@ -10,7 +10,7 @@
  * ============================================================
  */
 
-var CACHE_VERSION = 'v2';
+var CACHE_VERSION = 'v9';
 var CACHE = 'discover-savings-' + CACHE_VERSION;
 
 // Local development is network-first, so editing a file and reloading just
@@ -32,6 +32,8 @@ var ASSETS = [
   './js/data.js',
   './js/app.js',
   './manifest.webmanifest',
+  './img/wordmark.png',
+  './img/wordmark-white.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png'

@@ -45,13 +45,17 @@ The ledger is generated from a spreadsheet, not hand-edited:
 
 ```bash
 python tools/import_ledger.py   # ~/Downloads/discoversavings.xlsx -> js/data.js
-python tools/make_icons.py      # regenerate icons/*.png
+python tools/build_assets.py    # dist/*.png -> img/wordmark.png + icons/*.png
 ```
 
-`import_ledger.py` asserts that the newest running balance equals the savings
-balance and that nothing goes negative, then fails loudly if not. It also applies
-two date corrections in code rather than editing the spreadsheet, so the source
-file stays untouched — see the `DATE_FIXES` block for what and why.
+**The spreadsheet is the source of truth, column D included.** Balances are taken
+straight from column D rather than computed, so the app shows your own figures.
+
+`import_ledger.py` refuses to run if cell `D2` disagrees with the savings balance
+in `js/config.js`, since both appear on screen. It warns — but doesn't block — when
+column D stops reconciling against the amounts, because only you can say which
+cell is wrong. Two date corrections live in the script rather than the workbook, so
+your file stays untouched; see the `DATE_FIXES` block for what and why.
 
 ## Deploying
 
@@ -100,7 +104,7 @@ To remove: long-press the icon → App info → Uninstall.
 ## Layout
 
 ```
-index.html                 three views, swapped by toggling [hidden]
+index.html                 six views, swapped by toggling [hidden]
 css/app.css                all styling; palette as custom properties in :root
 js/config.js               credentials, accounts, balances, support number
 js/data.js                 GENERATED — do not hand-edit
@@ -108,8 +112,10 @@ js/app.js                  routing, login, rendering, search, session
 manifest.webmanifest
 sw.js                      cache-first service worker
 icons/                     192, 512, maskable-512
+img/wordmark.png           the wordmark, recoloured white
 tools/import_ledger.py     spreadsheet -> js/data.js
-tools/make_icons.py        writes icons/*.png (stdlib PNG encoder)
+tools/build_assets.py      dist/*.png -> wordmark + icons (stdlib PNG codec)
+dist/                      source logos, not served
 ```
 
 Single page with JS view switching rather than three HTML files. Real page loads
@@ -127,5 +133,13 @@ edit. `--fdic-navy` is a regulated value; leave it alone.
 wording is prescribed verbatim, em dash included. Don't reword it.
 
 **There is no opening balance.** The list is the most recent page of activity,
-not the life of the account. The oldest row is where the app stops loading; below
-it, **Load Earlier Transactions** opens a call-customer-service modal.
+not the life of the account. The oldest row is simply where the data stops.
+
+**The logos are Discover's.** `dist/` holds the originals; `build_assets.py`
+recolours the wordmark white and builds the three icon sizes from the app icon.
+Fine for a personal mockup, but this repo is public — worth remembering that
+you're serving someone else's trademark from it.
+
+**Forward navigation pauses on a spinner** (350–800ms, longer for login, and a
+random 2–5s when scheduling a transfer). Back is instant on purpose: delaying a
+`popstate` leaves the history entry changed while the old screen is still up.
