@@ -10,7 +10,7 @@
  * ============================================================
  */
 
-var CACHE_VERSION = 'v9';
+var CACHE_VERSION = 'v10';
 var CACHE = 'discover-savings-' + CACHE_VERSION;
 
 // Local development is network-first, so editing a file and reloading just
