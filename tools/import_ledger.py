@@ -43,9 +43,43 @@ EXCEL_EPOCH = datetime.date(1899, 12, 30)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.dirname(HERE)
-XLSX = os.path.join(os.path.expanduser("~"), "Downloads", "discoversavings.xlsx")
 OUT = os.path.join(PROJECT, "js", "data.js")
 CONFIG = os.path.join(PROJECT, "js", "config.js")
+
+# The workbook lives in the repo so it's backed up with everything else and
+# survives losing this machine. The Downloads path is only a fallback, kept
+# because that's where it used to live.
+IN_REPO = os.path.join(PROJECT, "data", "discoversavings.xlsx")
+IN_DOWNLOADS = os.path.join(os.path.expanduser("~"), "Downloads", "discoversavings.xlsx")
+
+
+def find_workbook():
+    """Pick the workbook to read, and complain if there are two of them.
+
+    Two copies drifting apart is the obvious trap here: you edit the one in
+    Downloads out of habit, the script reads the one in the repo, and the run
+    silently produces yesterday's ledger. Warn loudly rather than guess.
+    """
+    if os.path.exists(IN_REPO):
+        if os.path.exists(IN_DOWNLOADS):
+            repo_time = os.path.getmtime(IN_REPO)
+            downloads_time = os.path.getmtime(IN_DOWNLOADS)
+            if downloads_time > repo_time + 1:
+                print("  WARNING: the copy in Downloads is NEWER than the one in the repo.")
+                print("           Reading the repo copy: %s" % IN_REPO)
+                print("           If you edited the Downloads one, copy it over first:")
+                print("             cp \"%s\" \"%s\"\n" % (IN_DOWNLOADS, IN_REPO))
+        return IN_REPO
+
+    if os.path.exists(IN_DOWNLOADS):
+        print("  note: reading from Downloads. Move it into data/ so it's backed")
+        print("        up with the repo:  cp \"%s\" \"%s\"\n" % (IN_DOWNLOADS, IN_REPO))
+        return IN_DOWNLOADS
+
+    return None
+
+
+XLSX = find_workbook() or IN_REPO
 
 # Corrections agreed with the user.
 #
