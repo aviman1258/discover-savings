@@ -29,7 +29,7 @@ window.CONFIG = {
   // apy / rate are percentages without the sign; maturity is ISO so the app
   // formats it and there's no date string to get wrong in two places.
   accounts: [
-    { id: 'savings', kind: 'savings', name: 'Online Savings',         mask: '4417', balance: '56033.37' },
+    { id: 'savings', kind: 'savings', name: 'Online Savings',         mask: '4417', balance: '52482.50' },
     { id: 'cd-2093', kind: 'cd',      name: 'Certificate of Deposit', mask: '2093', balance: '28410.93',
       apy: '3.90', rate: '3.83', maturity: '2027-04-11' },
     { id: 'cd-7715', kind: 'cd',      name: 'Certificate of Deposit', mask: '7715', balance: '21940.43',

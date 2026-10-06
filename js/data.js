@@ -7,11 +7,13 @@
 // The oldest row is where the app stops loading, NOT where the account
 // opened -- there is no opening balance.
 window.TRANSACTIONS = [
-  {"date": "2026-09-30", "description": "Interest Paid", "amount": "135.54", "balance": "56033.37"},
-  {"date": "2026-09-03", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2520.87", "balance": "55897.83"},
-  {"date": "2026-09-01", "description": "ACH Deposit From JPMorgan Chase", "amount": "6000.00", "balance": "58418.70"},
-  {"date": "2026-08-31", "description": "Interest Paid", "amount": "114.86", "balance": "52418.70"},
-  {"date": "2026-08-14", "description": "ACH Deposit From Morgan Stanley", "amount": "4005.11", "balance": "52303.84"},
+  {"date": "2026-10-05", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2550.87", "balance": "52482.50"},
+  {"date": "2026-09-30", "description": "Interest Paid", "amount": "135.54", "balance": "55033.37"},
+  {"date": "2026-09-03", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2520.87", "balance": "54897.83"},
+  {"date": "2026-09-01", "description": "ACH Deposit From JPMorgan Chase", "amount": "6000.00", "balance": "57418.70"},
+  {"date": "2026-08-31", "description": "Interest Paid", "amount": "114.86", "balance": "51418.70"},
+  {"date": "2026-08-14", "description": "ACH Deposit From Morgan Stanley", "amount": "4005.11", "balance": "51303.84"},
+  {"date": "2026-08-11", "description": "ACH Withdrawal ROBINHOOD Funds", "amount": "-1000.00", "balance": "47298.73"},
   {"date": "2026-08-06", "description": "ACH Deposit From JPMorgan Chase", "amount": "4000.00", "balance": "48298.73"},
   {"date": "2026-08-04", "description": "Withdrawal Transfer from CD Account 1212", "amount": "41599.88", "balance": "44298.73"},
   {"date": "2026-08-03", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2520.87", "balance": "2698.85"},
