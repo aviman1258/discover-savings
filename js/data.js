@@ -7,6 +7,7 @@
 // The oldest row is where the app stops loading, NOT where the account
 // opened -- there is no opening balance.
 window.TRANSACTIONS = [
+  {"date": "2026-10-14", "description": "ACH Deposit From JPMorgan Chase", "amount": "8000.00", "balance": "60512.50"},
   {"date": "2026-10-05", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2520.87", "balance": "52512.50"},
   {"date": "2026-09-30", "description": "Interest Paid", "amount": "135.54", "balance": "55033.37"},
   {"date": "2026-09-03", "description": "ACH Withdrawal Rocket Mortgage", "amount": "-2520.87", "balance": "54897.83"},
