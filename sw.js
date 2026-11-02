@@ -1,4 +1,4 @@
-/* Service worker: cache-first over a fixed asset list.
+﻿/* Service worker: cache-first over a fixed asset list.
  *
  * Two jobs. It's what makes Chrome offer "Install" rather than just "Add to
  * Home screen", and it's what makes the installed app open with no network.
@@ -10,7 +10,7 @@
  * ============================================================
  */
 
-var CACHE_VERSION = 'v14';
+var CACHE_VERSION = 'v15';
 var CACHE = 'discover-savings-' + CACHE_VERSION;
 
 // Local development is network-first, so editing a file and reloading just
