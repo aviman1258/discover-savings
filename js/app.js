@@ -19,6 +19,25 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
+  /* Inline glyphs. Our own literals, never interpolated with data -- same
+   * reasoning as the chevron below, which is why innerHTML is safe here.
+   * A bank front for the savings account, a padlock for a CD, whose money is
+   * genuinely locked up until it matures.
+   */
+
+  var ICON_SAVINGS = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<path d="M3 9.5 12 4.5l9 5"/>'
+    + '<path d="M5.5 9.5v8M9.8 9.5v8M14.2 9.5v8M18.5 9.5v8"/>'
+    + '<path d="M3.5 20.5h17"/></svg>';
+
+  var ICON_CD = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2"/>'
+    + '<path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>';
+
+  var ICON_INFO = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<circle cx="12" cy="12" r="8.5"/>'
+    + '<path d="M12 11.2v5.1"/><path d="M12 7.9v.1"/></svg>';
+
   /* Money ------------------------------------------------------------------
    * Amounts arrive as strings and are parsed to integer cents before any
    * arithmetic, so floating point never touches the numbers. $0.01 drift in a
@@ -100,8 +119,33 @@
    * the entire implementation. The login screen stays navy in both modes.
    */
 
+  /* Status bar colour.
+   *
+   * On Android the theme-color meta paints the status bar, so it has to match
+   * whatever sits directly beneath it -- the header bar on most screens, but
+   * the navy login has no header at all. Keying it off the theme alone would
+   * leave a white strip above the navy login.
+   *
+   * Values match --surface, --page and --navy in the stylesheet.
+   */
+
+  var BAR_LIGHT = '#FFFFFF';
+  var BAR_DARK = '#1A1A26';
+  var BAR_NAVY = '#23233F';
+
+  function syncThemeColor(view) {
+    var meta = $('theme-color');
+    if (!meta) return;
+    var colour = view === 'login'
+      ? BAR_NAVY
+      : (document.body.classList.contains('dark') ? BAR_DARK : BAR_LIGHT);
+    meta.setAttribute('content', colour);
+  }
+
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
+    syncThemeColor(currentView());
+
     var button = $('theme-toggle');
     if (button) {
       button.setAttribute('aria-label',
@@ -150,6 +194,8 @@
     Object.keys(VIEWS).forEach(function (name) {
       VIEWS[name].hidden = name !== state.view;
     });
+
+    syncThemeColor(state.view);
 
     if (state.modal) {
       showModal(state.modal);
@@ -230,6 +276,21 @@
       };
     }
 
+    // Tapping "add a new account" under either transfer picker. There's no
+    // account-linking flow behind this and there isn't meant to be -- the
+    // dialog sends you back to the accounts you already have.
+    if (spec.kind === 'addaccount') {
+      return {
+        icon: ICON_INFO,
+        title: spec.side === 'from'
+          ? 'Add a Source Account'
+          : 'Add a Destination Account',
+        body: 'Please use one of your existing accounts to transfer money. To '
+          + 'link a new account, call us at <strong>' + CFG.supportPhone
+          + '</strong>.'
+      };
+    }
+
     if (spec.kind === 'deposit') {
       return {
         title: 'Deposit Submitted',
@@ -273,6 +334,13 @@
 
   function showModal(spec) {
     var content = modalContent(spec);
+
+    // Informational dialogs get the glyph; confirmations of something you just
+    // did don't need one.
+    var icon = $('modal-icon');
+    icon.innerHTML = content.icon || '';
+    icon.hidden = !content.icon;
+
     $('modal-title').textContent = content.title;
     // Only ever our own strings from config, plus figures we formatted
     // ourselves. No transaction data reaches here.
@@ -539,6 +607,10 @@
       button.type = 'button';
       button.className = 'row';
 
+      var icon = document.createElement('span');
+      icon.className = 'row__icon';
+      icon.innerHTML = account.kind === 'savings' ? ICON_SAVINGS : ICON_CD;
+
       var main = document.createElement('div');
       main.className = 'row__main';
 
@@ -557,6 +629,7 @@
       amount.className = 'row__amount';
       amount.textContent = money(cents(account.balance));
 
+      button.appendChild(icon);
       button.appendChild(main);
       button.appendChild(amount);
       button.insertAdjacentHTML('beforeend',
@@ -640,6 +713,17 @@
       banner.hidden = true;
       amount.value = '';
       navigate('transfer');
+    });
+
+    // Both go straight to the dialog -- no spinner, since nothing is being
+    // fetched. openModal pushes a history entry, so the back gesture closes it
+    // the same way the Close button does.
+    $('tf-add-from').addEventListener('click', function () {
+      openModal({ kind: 'addaccount', side: 'from' });
+    });
+
+    $('tf-add-to').addEventListener('click', function () {
+      openModal({ kind: 'addaccount', side: 'to' });
     });
 
     form.addEventListener('submit', function (event) {

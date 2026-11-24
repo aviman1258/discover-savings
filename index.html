@@ -5,7 +5,10 @@
 <!-- viewport-fit=cover lets the safe-area-inset-* env() values resolve, which is
      how content clears the Pixel's punch-hole camera and gesture nav bar. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#E55C20">
+<!-- Tracks the in-app theme toggle, not prefers-color-scheme: the app's dark
+     mode is a class on <body>, so the two can disagree and a hardcoded value
+     would leave a white status bar above a dark app. app.js rewrites it. -->
+<meta name="theme-color" id="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Discover Bank</title>
@@ -22,11 +25,14 @@
 <!-- Reusable bits, cloned by app.js ------------------------------------------->
 
 <!-- The real wordmark with its white background cut away by
-     tools/build_assets.py. Black letters, as printed. Readable straight onto the
-     orange header bar; on the navy login it sits on a white panel rather than
-     being knocked out to white, so the letters stay black everywhere. -->
+     tools/build_assets.py, which builds both variants from the one source.
+     Exactly one is ever displayed: the black-lettered mark on the white header
+     bar, the white knockout on the navy login and on dark mode's dark bar.
+     display:none keeps the other out of the accessibility tree, so both can
+     carry the same alt text without it being announced twice. -->
 <template id="tpl-wordmark">
-  <img class="wordmark" src="./img/wordmark.png" alt="Discover" width="559" height="97">
+  <img class="wordmark wordmark--ink" src="./img/wordmark.png" alt="Discover" width="559" height="97">
+  <img class="wordmark wordmark--knockout" src="./img/wordmark-white.png" alt="Discover" width="559" height="97">
 </template>
 
 <!-- Official FDIC digital sign, 12 CFR 328.5. The text is prescribed verbatim,
@@ -118,14 +124,14 @@
   <div class="strip" data-fdic></div>
 
   <div class="scroll">
-    <div class="total">
+    <div class="total total--hero">
       <div class="total__label">Total Balance</div>
       <!-- Summed from CONFIG.accounts, never hardcoded. -->
       <div class="total__value" id="total-balance">&nbsp;</div>
     </div>
 
     <h2 class="section">Bank Accounts</h2>
-    <ul class="rows" id="account-rows"></ul>
+    <ul class="rows card" id="account-rows"></ul>
 
     <button class="link-btn" type="button" id="log-out">Log Out</button>
     <footer class="foot" data-foot></footer>
@@ -214,15 +220,30 @@
     <form id="transfer-form" class="form" novalidate>
       <div id="transfer-error" class="banner" role="alert" hidden></div>
 
-      <label class="pick">
-        <span class="pick__label">From</span>
-        <select id="tf-from"></select>
-      </label>
+      <!-- The add buttons sit outside the <label>, not inside it. A button
+           inside a label also activates the label's control, so an inside
+           button would pop the native select picker open behind the dialog. -->
+      <div class="pick-group">
+        <label class="pick">
+          <span class="pick__label">From</span>
+          <select id="tf-from"></select>
+        </label>
+        <button class="add-link" type="button" id="tf-add-from">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+          Add a new source account
+        </button>
+      </div>
 
-      <label class="pick">
-        <span class="pick__label">To</span>
-        <select id="tf-to"></select>
-      </label>
+      <div class="pick-group">
+        <label class="pick">
+          <span class="pick__label">To</span>
+          <select id="tf-to"></select>
+        </label>
+        <button class="add-link" type="button" id="tf-add-to">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+          Add a new destination account
+        </button>
+      </div>
 
       <label class="pick">
         <span class="pick__label">Amount</span>
@@ -322,6 +343,9 @@
 <div class="modal" id="modal" hidden>
   <div class="modal__back" data-close-modal></div>
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <!-- Only the informational dialogs set this; confirmations leave it hidden.
+         It sits above the title in the markup so it reads in the right order. -->
+    <div class="modal__icon" id="modal-icon" aria-hidden="true" hidden></div>
     <h2 class="modal__title" id="modal-title"></h2>
     <!-- A div, not a p: the CD details render as rows, and block elements
          inside a <p> are invalid and get reparented by the browser. -->
